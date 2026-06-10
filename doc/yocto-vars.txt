@@ -1,0 +1,36 @@
+*yocto-vars.nvim* BitBake variable popup for Neovim
+
+COMMANDS                                               *yocto-vars-commands*
+
+:YoctoVar [variable]
+    Show the expanded BitBake variable for the recipe inferred from the
+    current .bb or .bbappend file. Without an argument, the variable under the
+    cursor is used.
+
+:YoctoVarRecipe {recipe} {variable}
+    Show the expanded BitBake variable for an explicit recipe.
+
+CONFIGURATION                                           *yocto-vars-config*
+
+Example:
+>
+  require("yocto_vars").setup({
+    backend = "auto",
+    build_dir = "build",
+    docker = {
+      service = "yocto-mac",
+    },
+  })
+<
+
+BACKENDS                                                *yocto-vars-backends*
+
+The direct backend sources ./init-build-env and runs bitbake-getvar in the
+current workspace.
+
+The docker backend runs the same command through docker compose run --rm -T.
+
+With backend="auto", Docker is tried first on macOS and direct execution is
+tried first elsewhere.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
