@@ -45,6 +45,9 @@ require("yocto_vars").setup({
     service = nil, -- defaults to yocto-mac on macOS, yocto-linux elsewhere
     compose_command = { "docker", "compose" },
     user = nil,
+    clear_ssh_auth_sock = true,
+    fallback_to_direct = false,
+    env = {},
   },
   keymaps = {
     enable = true,
@@ -58,7 +61,11 @@ require("yocto_vars").setup({
 })
 ```
 
-`backend = "auto"` prefers Docker first on macOS and direct execution first elsewhere. Direct execution runs:
+`backend = "auto"` uses Docker on macOS and tries direct execution before Docker elsewhere. macOS does not fall back to direct execution unless `docker.fallback_to_direct = true` is set.
+
+By default the Docker backend invokes `docker compose` with `SSH_AUTH_SOCK` cleared, avoiding Docker Desktop mount errors for macOS launchd SSH agent sockets. Set `docker.clear_ssh_auth_sock = false` if your Compose file needs the host SSH agent mount.
+
+Direct execution runs:
 
 ```sh
 source ./init-build-env build >/dev/null && bitbake-getvar -q --value -r <recipe> <variable>

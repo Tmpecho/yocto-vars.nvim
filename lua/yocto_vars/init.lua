@@ -16,6 +16,9 @@ local defaults = {
     service = nil,
     compose_command = { "docker", "compose" },
     user = nil,
+    clear_ssh_auth_sock = true,
+    fallback_to_direct = false,
+    env = {},
   },
   keymaps = {
     enable = true,

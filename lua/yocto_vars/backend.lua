@@ -19,9 +19,19 @@ local function append_data(target, data)
   end
 end
 
-local function run_command(cmd, cwd, callback)
+local function run_command(cmd, cwd, env, callback)
+  if type(env) == "function" then
+    callback = env
+    env = nil
+  end
+
   if vim.system then
-    vim.system(cmd, { cwd = cwd, text = true }, function(result)
+    local options = { cwd = cwd, text = true }
+    if env then
+      options.env = env
+    end
+
+    vim.system(cmd, options, function(result)
       vim.schedule(function()
         callback(result.code, result.stdout or "", result.stderr or "")
       end)
@@ -33,6 +43,7 @@ local function run_command(cmd, cwd, callback)
   local stderr = {}
   local job = vim.fn.jobstart(cmd, {
     cwd = cwd,
+    env = env,
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(_, data)
@@ -100,6 +111,21 @@ local function docker_command(opts)
   return cmd
 end
 
+local function docker_env(opts)
+  local docker = opts.docker or {}
+  local env = {}
+
+  for key, value in pairs(docker.env or {}) do
+    env[key] = value
+  end
+
+  if docker.clear_ssh_auth_sock ~= false then
+    env.SSH_AUTH_SOCK = ""
+  end
+
+  return env
+end
+
 local function backend_order(opts)
   if opts.backend == "direct" then
     return { "direct" }
@@ -110,16 +136,19 @@ local function backend_order(opts)
 
   local uname = vim.loop.os_uname()
   if uname and uname.sysname == "Darwin" then
-    return { "docker", "direct" }
+    if opts.docker and opts.docker.fallback_to_direct then
+      return { "docker", "direct" }
+    end
+    return { "docker" }
   end
   return { "direct", "docker" }
 end
 
 local function make_command(kind, opts)
   if kind == "docker" then
-    return docker_command(opts)
+    return docker_command(opts), docker_env(opts)
   end
-  return direct_command(opts)
+  return direct_command(opts), nil
 end
 
 function M.query(opts, callback)
@@ -139,8 +168,8 @@ function M.query(opts, callback)
       return
     end
 
-    local cmd = make_command(kind, opts)
-    run_command(cmd, opts.root, function(code, stdout, stderr)
+    local cmd, env = make_command(kind, opts)
+    run_command(cmd, opts.root, env, function(code, stdout, stderr)
       if code == 0 then
         callback({
           ok = true,
@@ -164,5 +193,7 @@ M._shell_quote = shell_quote
 M._bitbake_script = bitbake_script
 M._direct_command = direct_command
 M._docker_command = docker_command
+M._docker_env = docker_env
+M._backend_order = backend_order
 
 return M
