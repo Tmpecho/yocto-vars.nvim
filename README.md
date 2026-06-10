@@ -16,13 +16,11 @@ The plugin asks BitBake for the real value through `bitbake-getvar`; it does not
 
 ## Install With AstroNvim
 
-While developing from a local checkout:
-
 ```lua
 -- ~/.config/nvim/lua/plugins/yocto-vars.lua
 return {
   {
-    dir = "/path/to/yocto-vars.nvim",
+    "Tmpecho/yocto-vars.nvim",
     config = function(_, opts)
       require("yocto_vars").setup(opts)
     end,
@@ -32,23 +30,6 @@ return {
       docker = {
         service = "yocto-mac",
       },
-    },
-  },
-}
-```
-
-After publishing it to GitHub:
-
-```lua
-return {
-  {
-    "your-user/yocto-vars.nvim",
-    config = function(_, opts)
-      require("yocto_vars").setup(opts)
-    end,
-    opts = {
-      backend = "auto",
-      build_dir = "build",
     },
   },
 }
